@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ChatCat - Rooms</title>
+	<link rel="stylesheet" href="/css/roomsStyles.css">
+	<script src="/js/jquery-2.1.4.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+
+	<script>
+
+		'use strict';
+
+		// Jquery anonymous function which is called at the time of creation
+		
+		$(()=>
+		{
+			// When below statement will be executed it will try to connect the socket written in backend part
+			// roomslist is not a route.It is known as socket namespace ( carry unique datas )
+
+			let socket = io('<%= host %>/roomlist');
+			let newRoomInput = $("input[name='roomName']");
+
+			let renderChatRooms = chatrooms =>
+			{
+				let roomsListDiv = $('#roomsListUL');
+				let listStr = "";
+
+				for(let chat of chatrooms)
+				{
+					listStr+='<a href="/chat/'+chat.roomID+'"><li>'+chat.room+'</li></a>'
+				}
+
+				// First clearing all the previous rooms and then again adding them with the new room created. roomsListDiv.html('')
+				// will clear out all the rooms which were previously there.
+				roomsListDiv.html('').append(listStr);
+			}
+
+			// Get a list of chatrooms
+			// emit() method is used to send the data to other end. Note that we are not sending any data with emit()
+			// It just triggers , a signal to the server to send back data
+			socket.emit('getChatRooms');
+
+			// Event listener for chatRoomsList
+			socket.on('chatRoomsList', chatrooms=>
+			{
+				let data = JSON.parse(chatrooms);
+
+				renderChatRooms(data);
+			})
+
+			$('#createBtn').on('click', () =>
+			{
+				if(newRoomInput.val() != "")
+				{
+					socket.emit('createNewRoom', newRoomInput.val());
+					newRoomInput.val('');
+				}
+			})
+
+			// At this point client is successfully connected to the server
+			socket.on('connect',()=> console.log('Connected to Server'));
+		})		
+		
+
+	</script>
+
+</head>
+<body>
+	<div class="container">
+		<div class="titlePanel">
+			<h1>ChatCAT | Select or Create a Chatroom</h1>
+		</div>
+		<div class="controls">
+			<div class="userPicHolder"><img src="<%= user.profilePic %>" alt="<%= user.user %>"></div>
+			<p class="userName"><%= user.fullName %></p>
+			<a href="/logout" id="logOutBtn">Logout</a>
+		</div>
+		<div class="controls">
+			<input type="text" name="roomName" placeholder="Create a new Chatroom">
+			<a href="#" id="createBtn">Create</a>
+		</div>
+		<div class="roomsListDiv">
+			<ul class="roomsList" id="roomsListUL">
+			<!-- Loop list items here -->
+				
+			</ul>
+		</div>
+	</div>
+</body>
+</html>

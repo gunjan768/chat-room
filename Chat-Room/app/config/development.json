@@ -1,0 +1,18 @@
+{
+    "host": "http://localhost:3000" ,
+    "dbURI": "mongodb+srv://gunjan768:emilia12@chatcat-znwdk.mongodb.net/chat_app?retryWrites=true&w=majority" ,
+    "sessionSecret": "catscanfly" ,
+    "fb": 
+    {
+        "clientID": "505608713670509" ,
+        "clientSecret": "2c7edcc7d2e9d2464b985490df410178" ,
+        "callbackURL": "http://localhost:3000/auth/facebook/callback" ,
+        "profileFields": [ "id", "displayName", "photos"  ]    
+    },
+    "twitter": {
+        "consumerKey": "DWNb7sHjgEGRvhFz2M1EdfSxJ",
+        "consumerSecret": "xssylSWjLG2xzxkTKlLK8DRixcYFPwZboK052KDM8qxNZCrjau",
+        "callbackURL": "http://localhost:3000/login/callback",
+        "profileFields": ["id", "displayName", "photos"]
+    }
+}

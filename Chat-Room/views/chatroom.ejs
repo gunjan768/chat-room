@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ChatCat - <%= room %></title>
+	<link rel="stylesheet" href="/css/chatroomStyles.css">
+	<script src="/js/jquery-2.1.4.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://widget.cloudinary.com/global/all.js"></script>
+
+	<script>
+
+		'use strict';
+
+		$(()=>
+		{
+			let socket = io('<%= host %>/chatter');
+			
+			let roomID = '<%= roomID %>';
+			let user = '<%= user.fullName %>';				// From the database
+			let userPic = '<%= user.profilePic %>';			// From the database
+			let Gunjan = $('#Gunjan');
+			let chatInput = $("input[name='userInput']");
+			let chatMessagesDiv = $('.chatMessages');
+			let filePicker = $('#uploadFile');
+
+			socket.on('connect', () =>
+			{
+				socket.emit('join',
+				{
+					roomID ,
+					user ,  // means username
+					userPic ,
+				})
+			})
+
+			let userList = individualUser =>
+			{
+				let lists = `<div class="userBlock"> 
+								<div class="userPic">
+									<img src="${individualUser.userPic}"/>
+								</div>
+								<div class="cuserName">
+									${individualUser.user}
+								</div>
+							</div>`;
+
+				return lists;
+			}
+
+			socket.on('updatedUserList', data =>
+			{
+				let parseData = JSON.parse(data);
+				let userListData = '';
+				let cnt=0;
+
+				// console.log("Users : ",data);
+
+				for(let user of parseData)
+				{
+					userListData += userList(user);
+				}
+			
+				Gunjan.html('');
+				Gunjan.html(userListData);
+			})
+
+			let updateFeed = (userPic, message) =>
+			{
+				let template = '<div class="chatBlock">'+
+									'<div class="userPic"><img src="'+userPic+'"></div>'+
+									'<div class="chatMsg">'+message+'</div>'+
+								'</div>';
+				
+				// prependTo() will add new text at the front rather than at the back as done by appned.
+				$(template).hide().prependTo(chatMessagesDiv).slideDown(200);
+			}
+
+			// Don't use arrow function as a callback function as here we want to use 'this' keyword
+			// And arrow functions donot create new 'this' context unlike regular function
+			chatInput.on('keyup',function(event)
+			{
+				event.preventDefault();
+
+				let messagesFld = $(this);
+
+				if(event.which == 13 && messagesFld.val() !='')
+				{
+					socket.emit('newMessage',
+					{
+						roomID ,
+						user ,
+						userPic ,
+						message: messagesFld.val()
+					})
+
+					// Update the local feed
+					updateFeed(userPic, messagesFld.val());  
+					
+					messagesFld.val('');
+				}	
+			})
+
+			socket.on('inMessage', data =>
+			{
+				let parseData = JSON.parse(data);
+
+				updateFeed(parseData.userPic, parseData.message);
+			})
+
+			filePicker.on('click',function(event)
+			{
+				cloudinary.openUploadWidget(
+				{
+					cloud_name: 'ganju' ,
+					upload_preset: 'f5k8f9s1'
+				}, 
+				(error, result)=>
+				{
+					if(!error)
+					{
+						let images="";
+
+						for(let img of result)
+						images+='<img src="'+img.url+'">';
+
+						updateFeed(userPic, images);
+
+						socket.emit('newMessage',
+						{
+							roomID ,
+							user ,
+							userPic ,
+							message: images
+						})
+					}
+				})
+			})
+		})
+		
+	</script>
+
+</head>
+<body>
+	<div class="container">
+		<div class="titlePanel">
+			<h1>ChatCAT | <%= room %> </h1>
+		</div>
+		<div class="controls">
+			<div class="userPicHolder"><img src="<%= user.profilePic %>" alt="John Doe"></div>
+			<p class="userName"><%= user.fullName %></p>
+			<a href="/rooms" id="roomsBtn">Rooms</a>
+			<a href="/logout" id="logOutBtn">Logout</a>
+		</div>
+		<div class="chatListDiv">
+			<div class="chatMessagesPanel">
+				<div class="chatMessages">
+				<!-- Loop this for chat messages -->
+								
+				<!-- loop end -->
+				</div>
+				<div class="typePanel">
+					<input type="text" name="userInput" placeholder="Type here and press enter">
+					<a href="#" id="uploadFile" class="fileUploadBtn">Photo</a>
+				</div>
+			</div>
+			<!-- <div class="chatUsers"> -->
+			<!-- Loop this for chat users -->
+				<!-- <div class="userBlock">
+					<div class="userPic"><img src="./img/user.jpg" alt="John Doe"></div>
+					<div class="cuserName">John Doe</div>
+				</div> -->
+			<!-- loop end -->
+			<!-- </div> -->
+			<div id="Gunjan"></div>
+		</div>
+	</div>
+</body>
+</html>
