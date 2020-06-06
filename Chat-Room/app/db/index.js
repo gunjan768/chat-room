@@ -1,7 +1,7 @@
 'use strict';
 
 const config    	=   	require('../config');
-const Mongoose   	=  		require("mongoose");
+const Mongoose   	=  	    require("mongoose");
 
 const mongoose = Mongoose.connect(config.dbURI);
 
